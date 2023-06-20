@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Detalles del producto</title>
+</head>
+<body>
+  <h1>Detalles del producto</h1>
+  <h2><%= product.name %></h2>
+  <p>Precio: $<%= product.price %></p>
+  <p>Categoría: <%= product.category %></p>
+  <p>Disponibilidad: <%= product.availability ? 'Disponible' : 'No disponible' %></p>
+  <p>Descripción: <%= product.description %></p>
+
+  <form action="/api/products/<%= product.id %>/add-to-cart" method="POST">
+    <input type="hidden" name="cartId" value="<%= cartId %>">
+    <button type="submit">Agregar al carrito</button>
+  </form>
+</body>
+</html>
