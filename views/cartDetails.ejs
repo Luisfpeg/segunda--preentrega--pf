@@ -1,17 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Detalles del carrito</title>
+  <title>Detalles del Carrito</title>
 </head>
 <body>
-  <h1>Detalles del carrito</h1>
-  <h2>Carrito ID: <%= cartId %></h2>
-  <h3>Productos en el carrito:</h3>
+  <h1>Detalles del Carrito</h1>
   <ul>
-    <% products.forEach(function(product) { %>
-      <li><%= product.name %> - $<%= product.price %></li>
-    <% }); %>
+    {{#each cart.items}}
+      <li>{{this.name}} - {{this.price}}</li>
+    {{/each}}
   </ul>
 </body>
 </html>

@@ -1,6 +1,25 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 
+const productSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  price: {
+    type: Number,
+    required: true
+  },
+  category: {
+    type: String,
+    required: true
+  }
+});
+
+const Product = mongoose.model('Product', productSchema);
+
+module.exports = Product;
 // Endpoint para visualizar todos los productos
 router.get('/', (req, res) => {
   // Lógica para obtener todos los productos y pasarlos a la vista

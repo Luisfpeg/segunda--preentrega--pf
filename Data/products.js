@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const Product = require('../dao/models/product');
@@ -57,7 +58,7 @@ router.delete('/:pid', async (req, res) => {
     if (!deletedProduct) {
       res.status(404).send('Producto no encontrado');
     } else {
-      res.send('Producto eliminado');
+      res.json(deletedProduct);
     }
   } catch (error) {
     res.status(500).send('Error al eliminar el producto');

@@ -1,29 +1,40 @@
 const express = require('express');
 const router = express.Router();
+const Cart = require('../dao/models/cart');
+const Product = require('../dao/models/product');
 
-// Vista para ver los detalles de un producto
-router.get('/products/:id', (req, res) => {
-  const productId = req.params.id;
-  const cartId = req.query.cartId || '';
-
-  // Lógica para obtener el producto con el ID especificado y pasar los datos a la vista
-  const product = { id: 1, name: 'Producto 1', price: 10, category: 'Categoría 1', availability: true, description: 'Descripción del producto' };
-
-  res.render('productDetails', { product, cartId });
+// Renderizar vista del carrito
+router.get('/cart', async (req, res) => {
+  try {
+    const cart = await Cart.findOne({});
+    res.render('cart', { cart: cart });
+  } catch (error) {
+    res.status(500).send('Error al obtener el carrito');
+  }
 });
 
-// Vista para ver un carrito específico
-router.get('/carts/:cid', (req, res) => {
-  const cartId = req.params.cid;
+// Renderizar vista de detalles del carrito
+router.get('/cart/details', async (req, res) => {
+  try {
+    const cart = await Cart.findOne({});
+    res.render('cartDetails', { cart: cart });
+  } catch (error) {
+    res.status(500).send('Error al obtener los detalles del carrito');
+  }
+});
 
-  // Lógica para obtener los productos del carrito especificado y pasarlos a la vista
-  const products = [
-    { id: 1, name: 'Producto 1', price: 10 },
-    { id: 2, name: 'Producto 2', price: 20 },
-    { id: 3, name: 'Producto 3', price: 30 }
-  ];
-
-  res.render('cartDetails', { cartId, products });
+// Renderizar vista de detalles del producto
+router.get('/products/:pid', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.pid);
+    if (!product) {
+      res.status(404).send('Producto no encontrado');
+    } else {
+      res.render('productDetails', { product: product });
+    }
+  } catch (error) {
+    res.status(500).send('Error al obtener los detalles del producto');
+  }
 });
 
 module.exports = router;

@@ -7,28 +7,26 @@ const io = socketio(server);
 const mongoose = require('mongoose');
 const Product = require('./dao/models/product');
 const Cart = require('./dao/models/cart');
-const productsRouter = require('./rutas/products');
-const cartsRouter = require('./rutas/carts');
+const productsRouter = require('./routes/products');
+const cartsRouter = require('./routes/carts');
+const viewsRouter = require('./routes/views');
+const path = require('path');
+
 const port = 3000;
 
 // Configurar vistas
 app.set('view engine', 'ejs');
-app.set('views', __dirname + '/views');
+app.set('views', path.join(__dirname, 'views'));
 
 // Rutas
-const productsRouter = require('./routes/products');
-const cartsRouter = require('./routes/carts');
-const viewsRouter = require('./routes/views');
-
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/', viewsRouter);
 
 // Servidor
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Servidor escuchando en http://localhost:${port}`);
 });
-
 
 // Configuración de Mongoose y conexión a la base de datos
 mongoose.connect('mongodb://localhost:27017/tu_basededatos', {
@@ -52,21 +50,12 @@ app.engine('handlebars', require('express-handlebars')());
 io.on('connection', socket => {
   console.log('Usuario conectado');
 
-  socket.on('chat message', msg => {
-    io.emit('chat message', msg);
-  });
-
   socket.on('disconnect', () => {
     console.log('Usuario desconectado');
   });
-});
 
-// Rutas
-app.use('/products', productsRouter);
-app.use('/carts', cartsRouter);
-
-// Inicio del servidor
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
+  socket.on('chat message', msg => {
+    console.log('Mensaje recibido:', msg);
+    io.emit('chat message', msg);
+  });
 });
