@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
+const path = require('path');
 const ejs = require('ejs');
 
 // Configurar el motor de plantillas EJS
 router.set('view engine', 'ejs');
 router.set('views', path.join(__dirname, 'views'));
-
 
 // Function to save products to file
 function saveProducts(products) {
@@ -29,7 +29,6 @@ router.get('/', (req, res) => {
   const products = loadProducts();
   res.render('products', { products: products }); // Renderizar la plantilla "products.ejs" y pasar los datos de los productos
 });
-
 
 // Get product by id
 router.get('/:pid', (req, res) => {
@@ -82,14 +81,46 @@ router.put('/:pid', (req, res) => {
 // Delete product by id
 router.delete('/:pid', (req, res) => {
   const products = loadProducts();
-  const productIndex = products.findIndex(p => p.id === parseInt(req.params.pid));
-  if (productIndex === -1) {
-    res.status(404).send('Product not found');
-  } else {
-    products.splice(productIndex, 1);
-    saveProducts(products); // Save updated products to file
-    res.status(204).send(); // No content
+  const productIndex = products.findIndex(p => p.id === parseInt(req**carpeta routes/auth.js**
+```javascript
+const express = require('express');
+const router = express.Router();
+const passport = require('passport');
+const bcrypt = require('bcrypt');
+const User = require('../dao/models/user');
+
+// Ruta para mostrar el formulario de registro
+router.get('/register', (req, res) => {
+  res.render('register');
+});
+
+// Ruta para manejar el registro de un nuevo usuario
+router.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username, password: hashedPassword });
+    await user.save();
+    res.redirect('/login');
+  } catch (error) {
+    res.status(500).send('Error al registrar el usuario');
   }
 });
 
-module.exports = router;
+// Ruta para mostrar el formulario de inicio de sesión
+router.get('/login', (req, res) => {
+  res.render('login');
+});
+
+// Ruta para manejar el inicio de sesión de un usuario
+router.post('/login', passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }), (req, res) => {
+  res.redirect('/');
+});
+
+// Ruta para cerrar sesión
+router.get('/logout', (req, res) => {
+  req.logout();
+  res.redirect('/login');
+});
+
+module.exports = router;```
