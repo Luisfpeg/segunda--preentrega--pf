@@ -2,9 +2,13 @@ const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 const session = require('express-session');
-const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
-const GitHubStrategy = require('passport-github').Strategy;
+const passport = require('./config/passport'); // Importar la configuración de Passport
+const User = require('./models/user'); // Importar el modelo User
+const Cart = require('./models/cart'); // Importar el modelo Cart
+const Product = require('./models/product'); // Importar el modelo Product
+const path = require('path');
+const bodyParser = require('body-parser'); // Importar bodyParser para parsear el cuerpo de las solicitudes
+const flash = require('connect-flash'); // Importar connect-flash para mostrar mensajes flash
 
 // Configurar la conexión a MongoDB
 mongoose.connect('mongodb://localhost:27017/myapp', {
@@ -21,6 +25,10 @@ mongoose.connect('mongodb://localhost:27017/myapp', {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Middleware para parsear el cuerpo de las solicitudes
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
 // Configurar el middleware de sesión
 app.use(session({
   secret: 'secret-key',
@@ -32,50 +40,13 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Configurar la estrategia de autenticación local
-passport.use(new LocalStrategy(
-  async function (username, password, done) {
-    try {
-      const user = await User.findOne({ username: username });
-      if (!user) {
-        return done(null, false, { message: 'Usuario no encontrado' });
-      }
+// Configurar el middleware de connect-flash para mostrar mensajes flash
+app.use(flash());
 
-      const passwordMatch = await bcrypt.compare(password, user.password);
-      if (!passwordMatch) {
-        return done(null, false, { message: 'Contraseña incorrecta' });
-      }
-
-      return done(null, user);
-    } catch (error) {
-      return done(error);
-    }
-  }
-));
-
-// Configurar la estrategia de autenticación de GitHub
-passport.use(new GitHubStrategy({
-  clientID: 'YOUR_GITHUB_CLIENT_ID',
-  clientSecret: 'YOUR_GITHUB_CLIENT_SECRET',
-  callbackURL: 'YOUR_GITHUB_CALLBACK_URL'
-},
-function(accessToken, refreshToken, profile, done) {
-  // Lógica para autenticar con GitHub
-  // ...
-}));
-
-// Serializar y deserializar al usuario en la sesión
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (error) {
-    done(error);
-  }
+// Middleware para agregar el usuario actual a todas las vistas
+app.use((req, res, next) => {
+  res.locals.currentUser = req.user;
+  next();
 });
 
 // Configurar las rutas

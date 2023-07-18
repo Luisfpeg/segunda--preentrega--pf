@@ -6,9 +6,9 @@
 <body>
   <h1>Detalles del Carrito</h1>
   <ul>
-    {{#each cart.items}}
-      <li>{{this.name}} - {{this.price}}</li>
-    {{/each}}
+    <% cart.items.forEach(function(item) { %>
+      <li>Product ID: <%= item.productId %>, Quantity: <%= item.quantity %></li>
+    <% }); %>
   </ul>
 </body>
 </html>
