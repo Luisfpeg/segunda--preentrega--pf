@@ -6,3 +6,4 @@ module.exports = {
   adminPassword: process.env.ADMIN_PASSWORD,
   port: process.env.PORT || 3000,
 };
+

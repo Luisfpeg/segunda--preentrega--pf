@@ -10,6 +10,7 @@ const config = require('./config/config');
 const cartsRouter = require('./routes/carts');
 const productsRouter = require('./routes/products');
 const authRouter = require('./routes/auth');
+const { errorHandler } = require('./utils/errorMiddleware');
 
 mongoose.connect(config.mongoURL, {
   useNewUrlParser: true,
@@ -42,6 +43,8 @@ app.use((req, res, next) => {
 app.use('/carts', cartsRouter);
 app.use('/products', productsRouter);
 app.use('/auth', authRouter);
+
+app.use(errorHandler);
 
 app.listen(config.port, () => {
   console.log(`Server started on port ${config.port}`);
