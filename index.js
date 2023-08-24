@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
@@ -6,46 +7,67 @@ const passport = require('./config/passport');
 const path = require('path');
 const bodyParser = require('body-parser');
 const flash = require('connect-flash');
+const logger = require('./config/logging');
 const config = require('./config/config');
-const cartsRouter = require('./routes/carts');
-const productsRouter = require('./routes/products');
-const authRouter = require('./routes/auth');
-const { errorHandler } = require('./utils/errorMiddleware');
 
+// Configure MongoDB connection
 mongoose.connect(config.mongoURL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useCreateIndex: true,
+  useCreateIndex: true
 }).then(() => {
-  console.log('Connected to MongoDB');
+  logger.info('Connected to MongoDB');
 }).catch((error) => {
-  console.error('Error connecting to MongoDB:', error);
+  logger.error('Error connecting to MongoDB:', error);
 });
 
+// Set up view engine and views directory
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Middleware to parse request body
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+// Set up session middleware
 app.use(session({
   secret: 'secret-key',
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: false
 }));
+
+// Set up Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Set up connect-flash for flash messages
 app.use(flash());
 
+// Middleware to add the current user to all views
 app.use((req, res, next) => {
   res.locals.currentUser = req.user;
+  logger.info(`${req.method} ${req.url}`);
   next();
 });
+
+// Error handler middleware
+app.use((err, req, res, next) => {
+  logger.error(`An error occurred: ${err.message}`);
+  res.status(500).send('An error occurred');
+});
+
+// Routes
+const cartsRouter = require('./routes/carts');
+const productsRouter = require('./routes/products');
+const authRouter = require('./routes/auth');
+const loggerTestRouter = require('./routes/loggerTest'); // Add this line
 
 app.use('/carts', cartsRouter);
 app.use('/products', productsRouter);
 app.use('/auth', authRouter);
+app.use('/loggerTest', loggerTestRouter); // Add this line
 
-app.use(errorHandler);
-
+// Start the server
 app.listen(config.port, () => {
-  console.log(`Server started on port ${config.port}`);
+  logger.info(`Server started on port ${config.port}`);
 });
