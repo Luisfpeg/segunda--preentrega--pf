@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const flash = require('connect-flash');
 const logger = require('./config/logging');
 const config = require('./config/config');
+const User = require('./models/user'); // Agregado
 
 // Configure MongoDB connection
 mongoose.connect(config.mongoURL, {
@@ -60,12 +61,14 @@ app.use((err, req, res, next) => {
 const cartsRouter = require('./routes/carts');
 const productsRouter = require('./routes/products');
 const authRouter = require('./routes/auth');
-const loggerTestRouter = require('./routes/loggerTest'); // Add this line
+const loggerTestRouter = require('./routes/loggerTest');
+const usersRouter = require('./routes/api/users'); // Agregado
 
 app.use('/carts', cartsRouter);
 app.use('/products', productsRouter);
 app.use('/auth', authRouter);
-app.use('/loggerTest', loggerTestRouter); // Add this line
+app.use('/loggerTest', loggerTestRouter);
+app.use('/api/users', usersRouter); // Agregado
 
 // Start the server
 app.listen(config.port, () => {

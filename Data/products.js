@@ -1,66 +1,79 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../dao/models/product');
+const Product = require('../models/product');
+const logger = require('../config/logging');
 
-// Listar todos los productos
-router.get('/', async (req, res) => {
+// Ruta para crear un producto
+router.post('/create-product', async (req, res) => {
+  const { name, description } = req.body;
+
+  let owner = 'admin';
+
+  if (req.user && req.user.role === 'premium') {
+    owner = req.user.email;
+  }
+
   try {
-    const productos = await Product.find();
-    res.render('products', { productos: productos });
+    const newProduct = new Product({
+      name,
+      description,
+      owner,
+    });
+
+    await newProduct.save();
+    res.status(201).json({ message: 'Producto creado con éxito.' });
   } catch (error) {
-    res.status(500).send('Error al obtener los productos');
+    console.error('Error al crear el producto:', error);
+    res.status(500).json({ message: 'Error al crear el producto.' });
   }
 });
 
-// Obtener producto por id
-router.get('/:pid', async (req, res) => {
+// Ruta para modificar un producto
+router.put('/update-product/:productId', async (req, res) => {
+  const { productId } = req.params;
+  const { name, description } = req.body;
+
   try {
-    const producto = await Product.findById(req.params.pid);
-    if (!producto) {
-      res.status(404).send('Producto no encontrado');
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Producto no encontrado.' });
+    }
+
+    if (req.user.role === 'admin' || req.user.email === product.owner) {
+      product.name = name;
+      product.description = description;
+      await product.save();
+      return res.json({ message: 'Producto modificado con éxito.' });
     } else {
-      res.json(producto);
+      return res.status(403).json({ message: 'No tienes permisos para modificar este producto.' });
     }
   } catch (error) {
-    res.status(500).send('Error al obtener el producto');
+    console.error('Error al modificar el producto:', error);
+    res.status(500).json({ message: 'Error al modificar el producto.' });
   }
 });
 
-// Añadir nuevo producto
-router.post('/', async (req, res) => {
-  try {
-    const newProduct = await Product.create(req.body);
-    res.json(newProduct);
-  } catch (error) {
-    res.status(500).send('Error al agregar el producto');
-  }
-});
+// Ruta para eliminar un producto
+router.delete('/delete-product/:productId', async (req, res) => {
+  const { productId } = req.params;
 
-// Actualizar producto por id
-router.put('/:pid', async (req, res) => {
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(req.params.pid, req.body, { new: true });
-    if (!updatedProduct) {
-      res.status(404).send('Producto no encontrado');
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Producto no encontrado.' });
+    }
+
+    if (req.user.role === 'admin' || req.user.email === product.owner) {
+      await product.remove();
+      return res.json({ message: 'Producto eliminado con éxito.' });
     } else {
-      res.json(updatedProduct);
+      return res.status(403).json({ message: 'No tienes permisos para eliminar este producto.' });
     }
   } catch (error) {
-    res.status(500).send('Error al actualizar el producto');
-  }
-});
-
-// Eliminar producto por id
-router.delete('/:pid', async (req, res) => {
-  try {
-    const deletedProduct = await Product.findByIdAndDelete(req.params.pid);
-    if (!deletedProduct) {
-      res.status(404).send('Producto no encontrado');
-    } else {
-      res.json(deletedProduct);
-    }
-  } catch (error) {
-    res.status(500).send('Error al eliminar el producto');
+    console.error('Error al eliminar el producto:', error);
+    res.status(500).json({ message: 'Error al eliminar el producto.' });
   }
 });
 

@@ -1,64 +1,32 @@
 const express = require('express');
 const router = express.Router();
-const Cart = require('../models/cart');
 const Product = require('../models/product');
-const Ticket = require('../models/ticket');
-const middleware = require('../middleware');
-const config = require('../config/config'); // Import the config file
+const logger = require('../config/logging');
 
-router.post('/:cid/purchase', middleware.checkUserRole('user'), async (req, res) => {
+// Ruta para agregar un producto al carrito
+router.post('/add-to-cart/:productId', async (req, res) => {
+  const { productId } = req.params;
+  const user = req.user;
+
   try {
-    const user = req.user;
-    const cart = await Cart.findOne({ _id: req.params.cid }).populate('items');
+    const product = await Product.findById(productId);
 
-    if (!cart) {
-      return res.status(400).send('Cart not found');
+    if (!product) {
+      return res.status(404).json({ message: 'Producto no encontrado.' });
     }
 
-    const productsToUpdate = [];
-    const productsToRemove = [];
-
-    for (const item of cart.items) {
-      const product = await Product.findById(item.productId);
-
-      if (!product) {
-        return res.status(400).send(`Product with ID ${item.productId} not found`);
-      }
-
-      if (product.stock >= item.quantity) {
-        productsToUpdate.push({ product, quantity: item.quantity });
-      } else {
-        productsToRemove.push(item.productId);
-      }
+    if (user.role === 'premium' && user.email === product.owner) {
+      return res.status(403).json({ message: 'No puedes agregar tu propio producto al carrito.' });
     }
 
-    for (const productToUpdate of productsToUpdate) {
-      const { product, quantity } = productToUpdate;
-      product.stock -= quantity;
-      await product.save();
-    }
+    // Agregar la lógica para agregar el producto al carrito aquí
+    // ...
 
-    const validProducts = cart.items.filter(item => !productsToRemove.includes(item.productId));
-    const cartTotal = validProducts.reduce((total, item) => total + item.price, 0);
-
-    const newTicket = await Ticket.create({
-      code: generateUniqueCode(),
-      amount: cartTotal,
-      purchaser: user.email,
-    });
-
-    cart.items = cart.items.filter(item => productsToRemove.includes(item.productId));
-    await cart.save();
-
-    res.json({ unableToProcess: productsToRemove, newTicket });
+    return res.json({ message: 'Producto agregado al carrito con éxito.' });
   } catch (error) {
-    res.status(500).send('Error finalizing purchase');
+    console.error('Error al agregar el producto al carrito:', error);
+    res.status(500).json({ message: 'Error al agregar el producto al carrito.' });
   }
 });
-
-function generateUniqueCode() {
-  // Implement your code generation logic here
-  return 'TICKET123'; // Example code
-}
 
 module.exports = router;
