@@ -37,17 +37,11 @@ const logger = require('../config/logging');
 router.post('/create-product', async (req, res) => {
   const { name, description } = req.body;
 
-  let owner = 'admin';
-
-  if (req.user && req.user.role === 'premium') {
-    owner = req.user.email;
-  }
-
   try {
     const newProduct = new Product({
       name,
       description,
-      owner,
+      owner: req.user ? req.user.email : 'admin', // Asignar el propietario basado en el usuario o usar 'admin'
     });
 
     await newProduct.save();
@@ -58,33 +52,40 @@ router.post('/create-product', async (req, res) => {
   }
 });
 
-
-// Ruta para crear un producto
-router.post('/create-product', async (req, res) => {
-  const { name, description } = req.body;
-
-  let owner = 'admin';
-
-  if (req.user && req.user.role === 'premium') {
-    owner = req.user.email;
-  }
-
-  try {
-    const newProduct = new Product({
-      name,
-      description,
-      owner,
-    });
-
-    await newProduct.save();
-    res.status(201).json({ message: 'Producto creado con éxito.' });
-  } catch (error) {
-    console.error('Error al crear el producto:', error);
-    res.status(500).json({ message: 'Error al crear el producto.' });
-  }
-});
-
-// Ruta para modificar un producto
+/**
+ * @swagger
+ * /products/update-product/{productId}:
+ *   put:
+ *     summary: Modifica un producto existente
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         description: ID del producto a modificar
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: product
+ *         description: Datos del producto actualizados
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             name:
+ *               type: string
+ *             description:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: Producto modificado con éxito
+ *       404:
+ *         description: Producto no encontrado
+ *       403:
+ *         description: No tienes permisos para modificar este producto
+ *       500:
+ *         description: Error al modificar el producto
+ */
 router.put('/update-product/:productId', async (req, res) => {
   const { productId } = req.params;
   const { name, description } = req.body;
@@ -110,7 +111,29 @@ router.put('/update-product/:productId', async (req, res) => {
   }
 });
 
-// Ruta para eliminar un producto
+/**
+ * @swagger
+ * /products/delete-product/{productId}:
+ *   delete:
+ *     summary: Elimina un producto existente
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         description: ID del producto a eliminar
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Producto eliminado con éxito
+ *       404:
+ *         description: Producto no encontrado
+ *       403:
+ *         description: No tienes permisos para eliminar este producto
+ *       500:
+ *         description: Error al eliminar el producto
+ */
 router.delete('/delete-product/:productId', async (req, res) => {
   const { productId } = req.params;
 
