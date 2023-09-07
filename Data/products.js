@@ -3,6 +3,62 @@ const router = express.Router();
 const Product = require('../models/product');
 const logger = require('../config/logging');
 
+/**
+ * @swagger
+ * tags:
+ *   name: Products
+ *   description: Operaciones relacionadas con productos
+ */
+
+/**
+ * @swagger
+ * /products/create-product:
+ *   post:
+ *     summary: Crea un nuevo producto
+ *     tags: [Products]
+ *     parameters:
+ *       - in: body
+ *         name: product
+ *         description: Datos del producto a crear
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             name:
+ *               type: string
+ *             description:
+ *               type: string
+ *     responses:
+ *       201:
+ *         description: Producto creado con éxito
+ *       500:
+ *         description: Error al crear el producto
+ */
+router.post('/create-product', async (req, res) => {
+  const { name, description } = req.body;
+
+  let owner = 'admin';
+
+  if (req.user && req.user.role === 'premium') {
+    owner = req.user.email;
+  }
+
+  try {
+    const newProduct = new Product({
+      name,
+      description,
+      owner,
+    });
+
+    await newProduct.save();
+    res.status(201).json({ message: 'Producto creado con éxito.' });
+  } catch (error) {
+    console.error('Error al crear el producto:', error);
+    res.status(500).json({ message: 'Error al crear el producto.' });
+  }
+});
+
+
 // Ruta para crear un producto
 router.post('/create-product', async (req, res) => {
   const { name, description } = req.body;

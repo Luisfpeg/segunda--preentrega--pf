@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
@@ -9,7 +8,8 @@ const bodyParser = require('body-parser');
 const flash = require('connect-flash');
 const logger = require('./config/logging');
 const config = require('./config/config');
-const User = require('./models/user'); // Agregado
+const { specs, swaggerUi } = require('./swagger'); // Importa la configuración de Swagger
+const User = require('./models/user');
 
 // Configure MongoDB connection
 mongoose.connect(config.mongoURL, {
@@ -62,13 +62,16 @@ const cartsRouter = require('./routes/carts');
 const productsRouter = require('./routes/products');
 const authRouter = require('./routes/auth');
 const loggerTestRouter = require('./routes/loggerTest');
-const usersRouter = require('./routes/api/users'); // Agregado
+const usersRouter = require('./routes/api/users');
+
+// Ruta para la documentación de Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.use('/carts', cartsRouter);
 app.use('/products', productsRouter);
 app.use('/auth', authRouter);
 app.use('/loggerTest', loggerTestRouter);
-app.use('/api/users', usersRouter); // Agregado
+app.use('/api/users', usersRouter);
 
 // Start the server
 app.listen(config.port, () => {
