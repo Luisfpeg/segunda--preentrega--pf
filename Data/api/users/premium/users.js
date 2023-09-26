@@ -1,11 +1,10 @@
 // routes/api/users.js
-
 const express = require('express');
 const router = express.Router();
 const User = require('../../models/user');
 
 // Ruta para cambiar el rol de un usuario a "premium" o "user"
-router.put('/premium/:uid', async (req, res) => {
+router.put('/:uid', async (req, res) => {
   const { uid } = req.params;
   const { newRole } = req.body;
 

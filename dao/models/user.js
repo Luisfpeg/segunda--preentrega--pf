@@ -1,5 +1,4 @@
 // models/user.js
-
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -12,6 +11,13 @@ const userSchema = new mongoose.Schema({
   },
   resetPasswordToken: String,
   resetPasswordTokenExpiration: Date,
+  documents: [
+    {
+      name: String,
+      reference: String,
+    }
+  ],
+  last_connection: Date,
 });
 
 module.exports = mongoose.model('User', userSchema);
