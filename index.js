@@ -10,7 +10,10 @@ const bodyParser = require('body-parser');
 const flash = require('connect-flash');
 const logger = require('./config/logging');
 const config = require('./config/config');
-const User = require('./models/user'); // Agregado
+const User = require('./models/user'); 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const paymentRouter = require('./Data/payment');
+app.use('/payment', paymentRouter);
 
 // Configure MongoDB connection
 mongoose.connect(config.mongoURL, {
@@ -63,13 +66,23 @@ const cartsRouter = require('./routes/carts');
 const productsRouter = require('./routes/products');
 const authRouter = require('./routes/auth');
 const loggerTestRouter = require('./routes/loggerTest');
-const usersRouter = require('./routes/api/users'); // Agregado
+const usersRouter = require('./routes/api/users'); 
 
 app.use('/carts', cartsRouter);
 app.use('/products', productsRouter);
 app.use('/auth', authRouter);
 app.use('/loggerTest', loggerTestRouter);
-app.use('/api/users', usersRouter); // Agregado
+app.use('/api/users', usersRouter); 
+
+// Stripe payment processing route
+app.post('/process-payment', async (req, res) => { 
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: 1000, // Monto en centavos
+    currency: 'usd',
+  });
+
+  res.json({ client_secret: paymentIntent.client_secret });
+}); 
 
 // Start the server
 app.listen(config.port, () => {
