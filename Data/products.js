@@ -3,6 +3,8 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/product');
+const User = require('../models/user');
+const sendEmail = require('../utils/email'); // Asumiendo que tienes un módulo para enviar correos
 const logger = require('../config/logging');
 
 // Ruta para crear un producto
@@ -68,6 +70,18 @@ router.delete('/delete-product/:productId', async (req, res) => {
     }
 
     if (req.user.role === 'admin' || req.user.email === product.owner) {
+      // Verificar si el producto pertenece a un usuario premium
+      if (product.owner && product.owner !== 'admin') {
+        const user = await User.findOne({ email: product.owner });
+        if (user && user.role === 'premium') {
+          const emailSubject = 'Producto Eliminado';
+          const emailBody = `Estimado ${user.name},\nTu producto "${product.name}" ha sido eliminado.\nGracias por usar nuestro servicio.`;
+
+          // Enviar correo al usuario premium
+          sendEmail(user.email, emailSubject, emailBody);
+        }
+      }
+
       await product.remove();
       return res.json({ message: 'Producto eliminado con éxito.' });
     } else {

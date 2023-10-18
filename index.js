@@ -14,6 +14,9 @@ const User = require('./models/user');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const paymentRouter = require('./Data/payment');
 app.use('/payment', paymentRouter);
+const userApiRoutes = require('./routes/userApiRoutes');
+const adminRoutes = require('./routes/admin');
+
 
 // Configure MongoDB connection
 mongoose.connect(config.mongoURL, {
@@ -33,6 +36,7 @@ app.set('views', path.join(__dirname, 'views'));
 // Middleware to parse request body
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Set up session middleware
 app.use(session({
@@ -40,6 +44,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
+
+// Use the admin routes
+app.use('/admin', adminRoutes);
 
 // Set up Passport middleware
 app.use(passport.initialize());
@@ -61,6 +68,9 @@ app.use((err, req, res, next) => {
   res.status(500).send('An error occurred');
 });
 
+// Use the new user API routes
+app.use('/api/users', userApiRoutes);
+
 // Routes
 const cartsRouter = require('./routes/carts');
 const productsRouter = require('./routes/products');
@@ -73,6 +83,9 @@ app.use('/products', productsRouter);
 app.use('/auth', authRouter);
 app.use('/loggerTest', loggerTestRouter);
 app.use('/api/users', usersRouter); 
+app.listen(config.port, () => {
+  console.log(`Servidor iniciado en el puerto ${config.port}`);
+});
 
 // Stripe payment processing route
 app.post('/process-payment', async (req, res) => { 
@@ -86,5 +99,5 @@ app.post('/process-payment', async (req, res) => {
 
 // Start the server
 app.listen(config.port, () => {
-  logger.info(`Server started on port ${config.port}`);
+  console.log(`Servidor iniciado en el puerto ${config.port}`);
 });
